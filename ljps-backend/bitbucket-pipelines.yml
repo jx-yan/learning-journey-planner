@@ -1,0 +1,46 @@
+image: node:latest
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: Build, Test, Lint on pull request
+          script:
+            - npm install
+            - npm run citest
+            - npx eslint .
+          caches:
+            - node
+  branches:
+    master:
+      - parallel:
+          - step:
+              name: Build and Test
+              caches:
+                - node
+              script:
+                - npm install
+                - npm run citest
+          - step:
+              name: Code linting
+              script:
+                - npm install eslint
+                - npx eslint .
+              caches:
+                - node
+    develop:
+      - parallel:
+          - step:
+              name: Build and Test
+              caches:
+                - node
+              script:
+                - npm install
+                - npm run citest
+          - step:
+              name: Code linting
+              script:
+                - npm install eslint
+                - npx eslint .
+              caches:
+                - node

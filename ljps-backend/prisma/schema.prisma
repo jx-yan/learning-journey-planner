@@ -1,0 +1,104 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity"]
+}
+
+datasource db {
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
+  referentialIntegrity = "prisma"
+}
+
+model Departments {
+  DeptID   Int     @id @default(autoincrement())
+  DeptName String  @db.VarChar(60) @unique
+  DeptDesc String? @db.VarChar(255)
+  Jobs     Jobs[]
+  Staff   Staff[]
+}
+
+model Access {
+  AccessID   Int    @id @default(autoincrement())
+  AccessName String @db.VarChar(20) @unique
+  Staff      Staff[]
+}
+
+model Courses {
+  CourseID       Int @id @default(autoincrement())
+  CourseCode     String @db.VarChar(20) @unique
+  CourseName     String @db.VarChar(125)
+  CourseDesc     String @db.VarChar(255)
+  CourseType     String @db.VarChar(30)
+  CourseStatus   String @db.VarChar(30)
+  CourseCategory String @db.VarChar(30)
+  Skills         Skills[]
+  Registrations  Registrations[]
+  LearningJourneys  LearningJourneys[]
+}
+
+model Jobs {
+  JobID   Int    @id @default(autoincrement())
+  DeptID  Int    @db.Int
+  JobName String @db.VarChar(60) @unique
+  JobDesc String @db.VarChar(255)
+  JobStatus Boolean @default(true)
+  SkillsRequired  Skills[]
+  LearningJourneys    LearningJourneys[]
+  Dept    Departments @relation(fields: [DeptID], references: [DeptID], onDelete:SetNull)
+
+  @@index([DeptID], name: "DeptID")
+}
+
+model Registrations {
+  RegID            Int     @id @default(autoincrement())
+  RegStatus        String  @db.VarChar(30)
+  CompletionStatus String? @db.VarChar(30)
+  CourseID         Int     @db.Int
+  StaffID          Int     @db.Int
+  CourseReg        Courses @relation(fields: [CourseID], references: [CourseID], onDelete:SetNull)
+  StaffReg         Staff   @relation(fields: [StaffID], references: [StaffID], onDelete:SetNull)
+
+  @@index([CourseID])
+  @@index([StaffID])
+}
+
+model Skills {
+  SkillID   Int     @id @default(autoincrement())
+  SkillName String  @db.VarChar(50) @unique
+  SkillDesc String? @db.VarChar(255)
+  SkillStatus Boolean @default(true)
+  Courses   Courses[]
+  Staff     Staff[]
+  Jobs      Jobs[]
+}
+
+model Staff {
+  StaffID     Int    @id @default(autoincrement())
+  StaffCode   String @db.VarChar(30) @unique
+  Staff_FName String @db.VarChar(30)
+  Staff_LName String @db.VarChar(30)
+  StaffEmail  String @db.VarChar(40)
+  DeptID      Int    @db.Int
+  AccessID    Int    @db.Int
+  Registrations      Registrations[]
+  SkillsAcquired     Skills[]
+  LearningJourneys   LearningJourneys[]
+  Access     Access  @relation(fields: [AccessID], references: [AccessID], onDelete:SetNull)
+  Dept    Departments @relation(fields: [DeptID], references: [DeptID], onDelete:SetNull)
+
+  @@index([DeptID])
+}
+
+// skills required is taken from Job table
+// skills acquired is taken from Staff table
+model LearningJourneys {
+  JourneyID   Int    @id @default(autoincrement())
+  JourneyName String? @db.VarChar(60) @unique
+  JourneyDesc String @db.VarChar(255)
+  JobID       Int    @db.Int
+  Job         Jobs   @relation(fields: [JobID], references: [JobID], onDelete:SetNull)
+  Courses     Courses[]
+  Staff       Staff[]
+
+  @@index([JobID])
+}
